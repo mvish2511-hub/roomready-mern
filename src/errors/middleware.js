@@ -1,5 +1,5 @@
 'use strict';
-const { DomainError } = require('./index');
+const { DomainError,ValidationError } = require('./index');
 
 function problem(req, res, { status, type, title, detail, extras = {} }) {
   res.status(status).type('application/problem+json')
@@ -16,13 +16,21 @@ function notFound(req, res) {
   });
 }
 
+/** A body that is not JSON at all is a malformed body like any other: 400 /errors/validation. */
+function notJson() {
+  return new ValidationError([{ field: 'body', message: 'The body is not valid JSON' }]);
+}
+
 /**
  * The one place that turns a thrown error into an answer. Express knows an error handler by its four arguments, so
  * `next` stays although it is not called.
  */
 function errorHandler(err, req, res, next) {
-  if (err instanceof DomainError) {
-    problem(req, res, {status: err.status,type: err.type,      title: err.title,detail: err.message,extras: err.extras()});
+  const refusal = err.type === 'entity.parse.failed' ? notJson() : err;
+  if (refusal instanceof DomainError) {
+    problem(req, res, {
+      status: refusal.status, type: refusal.type, title: refusal.title, detail: refusal.message, extras: refusal.extras(),
+    });
     return;
   }
   throw err;

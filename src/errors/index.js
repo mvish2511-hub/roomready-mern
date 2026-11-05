@@ -39,4 +39,10 @@ class NoSuchRoom extends DomainError {
   }
 }
 
-module.exports = { DomainError, ValidationError, NoSuchProperty, NoSuchRoom };
+class RoomNotOccupied extends DomainError {
+  constructor(no) {
+    super(400, '/errors/room-not-occupied', 'Room not occupied', `Room ${no} has no guest to check out`);
+  }
+}
+
+module.exports = {DomainError, ValidationError, NoSuchProperty,NoSuchRoom, RoomNotOccupied};

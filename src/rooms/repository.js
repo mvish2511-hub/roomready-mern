@@ -57,10 +57,15 @@ function housekeepersOf(propertyId) {
   return Housekeeper.find({ propertyId }).sort({ id: 1 }).lean();
 }
 
+/** The room's current stay: its latest by check-in, or null. */
+function currentStay(propertyId, roomId) {
+  return Stay.findOne({ propertyId, roomId }).sort({ checkedInAt: -1 }).lean();
+}
+
 /** The current stay of each of these rooms (the latest by check-in), keyed by room number. */
 async function currentStays(propertyId, roomNos) {
   const stays = await Stay.find({ propertyId, roomId: { $in: roomNos } }).sort({ checkedInAt: 1 }).lean();
   return new Map(stays.map((st) => [st.roomId, st]));
 }
 
-module.exports = { propertyExists, addProperty, roomsOf, room, housekeepersOf, currentStays };
+module.exports = { Stay, propertyExists, addProperty, roomsOf, room, housekeepersOf, currentStay, currentStays };
